@@ -1,8 +1,9 @@
-name: Deploy Strapi to ECS
+name: Deploy Strapi on ECS with Terraform
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 env:
   AWS_REGION: eu-north-1
@@ -25,22 +26,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: Log in to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to ECR
+      - name: Build, tag, and push Docker image to ECR
         run: |
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./strapi
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Terraform Init
-        working-directory: terraform
+      - name: Initialize Terraform
+        working-directory: ./terraform
         run: terraform init
 
-      - name: Terraform Apply
-        working-directory: terraform
+      - name: Apply Terraform (auto-approve)
+        working-directory: ./terraform
         run: terraform apply -auto-approve
-        env:
-          TF_VAR_image_url: "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
