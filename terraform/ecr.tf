@@ -1,3 +1,3 @@
-resource "aws_ecr_repository" "zayn-rep" {
+resource "aws_ecr_repository" "strapi_repo`" {
   name = var.ecr_repo_name
 }
