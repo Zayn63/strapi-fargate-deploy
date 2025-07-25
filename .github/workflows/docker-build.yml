@@ -1,4 +1,4 @@
-name: Build and Deploy Strapi on ECS
+name: Deploy Strapi to ECS with Terraform
 
 on:
   push:
@@ -9,6 +9,7 @@ env:
   AWS_REGION: eu-north-1
   ECR_REPOSITORY: strapi-app
   IMAGE_TAG: ${{ github.sha }}
+  TF_VAR_image_tag: ${{ github.sha }}
 
 jobs:
   deploy:
@@ -16,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -24,26 +25,3 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Log in to Amazon ECR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.configure-aws-credentials.outputs.aws-account-id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-
-      - name: Build Docker image
-        run: |
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
