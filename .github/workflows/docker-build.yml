@@ -1,25 +1,23 @@
-name: Deploy Strapi to ECS Fargate
+name: Deploy Strapi to AWS ECS
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REGISTRY: 607700977843.dkr.ecr.eu-north-1.amazonaws.com
+  ECR_REPOSITORY: zayn-rep
+  IMAGE_TAG: latest
 
 jobs:
   deploy:
-    name: Build & Deploy to AWS
+    name: Build and Deploy Strapi App
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: eu-north-1
-      ECR_REPOSITORY: strapi-app
-      ECS_CLUSTER: strapi-cluster
-      ECS_SERVICE: strapi-service
-      CONTAINER_NAME: strapi-container
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -29,33 +27,24 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build, Tag, and Push Docker image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE_TAG=$(date +%s)
-          IMAGE_URI=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-          docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Build, Tag, and Push Docker Image to ECR
+        run: |
+          docker build -t $ECR_REPOSITORY .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.6.0
 
       - name: Terraform Init
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="image_url=${{ env.IMAGE_URI }}"
-
-      - name: Force new ECS deployment
-        run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_image_url: "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
