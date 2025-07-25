@@ -1,0 +1,13 @@
+[
+  {
+    "name": "strapi",
+    "image": "${607700977843}.dkr.ecr.${eu-north-1}.amazonaws.com/strapi:latest",
+    "portMappings": [
+      {
+        "containerPort": 1337,
+        "hostPort": 1337
+      }
+    ],
+    "essential": true
+  }
+]
