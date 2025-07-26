@@ -1,15 +1,24 @@
-FROM node:18
+# Use the official Node.js image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-COPY package.json ./
-COPY yarn.lock ./
-RUN yarn install
+# Copy package.json and package-lock.json from the strapi folder
+COPY strapi/package.json ./
+COPY strapi/package-lock.json ./
 
-COPY . .
+# Install dependencies
+RUN npm install
 
-RUN yarn build
+# Copy the entire Strapi app source code
+COPY strapi/. .
 
+# Build the Strapi app
+RUN npm run build
+
+# Expose the port Strapi runs on
 EXPOSE 1337
 
-CMD ["yarn", "start"]
+# Start the app
+CMD ["npm", "start"]
