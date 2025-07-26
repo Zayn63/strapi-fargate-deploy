@@ -1,11 +1,15 @@
-FROM node:20
+FROM node:18
 
 WORKDIR /app
 
-COPY ./strapi-app ./
+COPY package.json ./
+COPY yarn.lock ./
+RUN yarn install
 
-RUN npm install
+COPY . .
+
+RUN yarn build
 
 EXPOSE 1337
 
-CMD ["npm", "run", "develop"]
+CMD ["yarn", "start"]
