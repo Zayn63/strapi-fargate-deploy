@@ -1,24 +1,20 @@
-# Use the official Node.js image
-FROM node:18-alpine
+FROM node:18
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json from the strapi folder
-COPY strapi/package.json ./
-COPY strapi/package-lock.json ./
+# Copy package files first (for caching npm install)
+COPY strapi-app/package.json .
+COPY strapi-app/package-lock.json .
 
-# Install dependencies
+# Install dependencies using npm
 RUN npm install
 
-# Copy the entire Strapi app source code
-COPY strapi/. .
+# Copy the rest of the application
+COPY strapi-app/. .
 
-# Build the Strapi app
+# Build Strapi (optional for production builds)
 RUN npm run build
 
-# Expose the port Strapi runs on
 EXPOSE 1337
 
-# Start the app
 CMD ["npm", "start"]
