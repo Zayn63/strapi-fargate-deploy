@@ -1,7 +1,7 @@
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.strapi_cluster.name
+output "vpc_id" {
+  value = module.vpc.vpc_id
 }
 
-output "strapi_app_url" {
-  value = "http://${aws_lb.strapi_alb.dns_name}"
+output "public_subnets" {
+  value = module.vpc.public_subnets
 }
