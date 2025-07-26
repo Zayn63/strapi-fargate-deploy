@@ -1,4 +1,4 @@
-name: Deploy to AWS ECS
+name: Deploy Strapi to ECS
 
 on:
   push:
@@ -8,40 +8,35 @@ on:
 env:
   AWS_REGION: eu-north-1
   ECR_REPOSITORY: zayn-repo
+  IMAGE_TAG: latest
   ECS_CLUSTER: ecs
   ECS_SERVICE: strapi
-  CONTAINER_NAME: strapi-app
+  ECS_TASK_DEFINITION: .github/task-def.json
 
 jobs:
   deploy:
-    name: Build and Deploy to ECS
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Log in to Amazon ECR
+      - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and push Docker image to ECR
+      - name: Build, tag, and push Docker image
         run: |
-          IMAGE_TAG=latest
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./strapi-app
           docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Update ECS service with new image
-        run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment
+      - name: Deploy to ECS
+        uses
