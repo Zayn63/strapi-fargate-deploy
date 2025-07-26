@@ -1,11 +1,4 @@
-variable "image_tag" {
+variable "image_url" {
+  description = "Docker image URL (Docker Hub)"
   type        = string
-  description = "Docker image tag for ECS deployment"
-  default     = "latest"
-}
-
-variable "image_repo" {
-  type        = string
-  default     = "zayn63/strapi"
-  description = "Docker image repository"
 }
