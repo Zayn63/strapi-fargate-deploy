@@ -1,9 +1,29 @@
+resource "aws_security_group" "strapi_sg" {
+  name        = "strapi-sg"
+  description = "Allow HTTP access"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 1337
+    to_port     = 1337
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_lb" "strapi_alb" {
   name               = "strapi-alb"
   internal           = false
   load_balancer_type = "application"
-  subnets            = module.vpc.public_subnets
   security_groups    = [aws_security_group.strapi_sg.id]
+  subnets            = module.vpc.public_subnets
 }
 
 resource "aws_lb_target_group" "strapi_tg" {
@@ -11,15 +31,15 @@ resource "aws_lb_target_group" "strapi_tg" {
   port     = 1337
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
-
+  target_type = "ip"
   health_check {
     path                = "/"
     protocol            = "HTTP"
-    matcher             = "200"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
+    matcher             = "200"
   }
 }
 
