@@ -1,7 +1,3 @@
-output "vpc_id" {
-  value = module.vpc.vpc_id
-}
-
-output "public_subnets" {
-  value = module.vpc.public_subnets
+output "service_url" {
+  value = aws_ecs_service.strapi_service.name
 }
