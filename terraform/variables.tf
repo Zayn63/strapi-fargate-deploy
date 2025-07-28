@@ -7,9 +7,15 @@ variable "vpc_id" {
 }
 
 variable "subnet_ids" {
-  type    = list(string)
-  default = ["subnet-086c3ae98cdde3671", "subnet-0da2d6106d23b40c7"]
+  description = "List of subnet IDs for ECS tasks"
+  type        = list(string)
 }
+
+variable "security_group_id" {
+  description = "Security Group ID for ECS tasks"
+  type        = string
+}
+
 
 variable "strapi_image" {
   default = "zayn63/strapi:latest"
