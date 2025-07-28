@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
@@ -21,7 +21,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./docker        # 👈 use the folder where your Dockerfile is
-          file: ./docker/Dockerfile
+          context: ./strapi-app           # 👈 points to strapi app folder
+          file: ./docker/Dockerfile       # 👈 uses Dockerfile inside docker/
           push: true
           tags: zayn63/strapi:latest
