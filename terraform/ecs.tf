@@ -40,14 +40,16 @@ resource "aws_ecs_task_definition" "strapi" {
         hostPort      = 1337
         protocol      = "tcp"
       }]
-      logConfiguration = {
+      logConfiguration {
         logDriver = "awslogs"
+
         options = {
-          awslogs-group         = "/ecs/strapi"
+          awslogs-group         = aws_cloudwatch_log_group.strapi_logs.name
           awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "ecs"
-        }
-      }
+          awslogs-stream-prefix = "strapi"
+       }
+     }
+
     }
   ])
 }
