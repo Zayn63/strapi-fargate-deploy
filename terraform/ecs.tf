@@ -56,6 +56,7 @@ resource "aws_ecs_service" "strapi" {
   task_definition = aws_ecs_task_definition.strapi.arn
   launch_type     = "FARGATE"
   desired_count   = 1
+  force_new_deployment = true
 
   network_configuration {
     subnets          = var.subnet_ids
