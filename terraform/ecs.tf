@@ -7,13 +7,15 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Effect = "Allow"
       }
-      Effect = "Allow"
-    }]
+    ]
   })
 }
 
@@ -30,32 +32,36 @@ resource "aws_ecs_task_definition" "strapi" {
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
-  container_definitions = jsonencode([{
-    name      = "strapi"
-    image     = "zayn63/strapi:latest"
-    essential = true
-    portMappings = [{
-      containerPort = 1337
-      hostPort      = 1337
-      protocol      = "tcp"
-    }]
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        awslogs-group         = "/ecs/strapi"
-        awslogs-region        = "eu-north-1"
-        awslogs-stream-prefix = "ecs"
+  container_definitions = jsonencode([
+    {
+      name      = "strapi"
+      image     = "zayn63/strapi:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 1337
+          hostPort      = 1337
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/strapi"
+          awslogs-region        = "eu-north-1"
+          awslogs-stream-prefix = "ecs"
+        }
       }
     }
-  }])
+  ])
 }
 
 resource "aws_ecs_service" "strapi" {
-  name            = "strapi-service"
-  cluster         = aws_ecs_cluster.strapi.id
-  task_definition = aws_ecs_task_definition.strapi.arn
-  launch_type     = "FARGATE"
-  desired_count   = 1
+  name                = "strapi-service"
+  cluster             = aws_ecs_cluster.strapi.id
+  task_definition     = aws_ecs_task_definition.strapi.arn
+  launch_type         = "FARGATE"
+  desired_count       = 1
   force_new_deployment = true
 
   network_configuration {
