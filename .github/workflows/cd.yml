@@ -21,14 +21,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Auto Format Terraform Files
+      - name: Format Terraform code
         run: terraform -chdir=terraform fmt -recursive
 
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
       - name: Terraform Apply
-        run: |
-          terraform -chdir=terraform apply -auto-approve \
-            -var="security_group_id=sg-0449336e4644cdbb3" \
-            -var='subnet_ids=["subnet-086c3ae98cdde3671","subnet-0da2d6106d23b40c7"]'
+        run: terraform -chdir=terraform apply -auto-approve
