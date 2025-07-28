@@ -1,8 +1,9 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
-COPY . .
+# Copy everything from strapi-app/ into container
+COPY ../strapi-app/ .
 
 RUN npm install
 
