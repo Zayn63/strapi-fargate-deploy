@@ -22,8 +22,11 @@ jobs:
           aws-region: eu-north-1
 
       - name: Terraform Format Check
+        run: terraform -chdir=terraform fmt -check
+  
+      - name: Terraform Format Fix (if you want to auto-fix instead)
         run: terraform -chdir=terraform fmt -recursive
-
+          
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
