@@ -3,7 +3,7 @@ output "strapi_url" {
 }
 
 output "ecs_cluster_name" {
-  value = aws_ecs_cluster.strapi_cluster.name
+  value = aws_ecs_cluster.strapi.name
 }
 
 output "log_group_name" {
