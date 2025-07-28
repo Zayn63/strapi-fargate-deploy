@@ -1,9 +1,9 @@
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.strapi.name
+output "strapi_url" {
+  value = aws_lb.strapi_alb.dns_name
 }
 
-output "ecs_service_name" {
-  value = aws_ecs_service.strapi.name
+output "ecs_cluster_name" {
+  value = aws_ecs_cluster.strapi_cluster.name
 }
 
 output "log_group_name" {
