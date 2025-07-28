@@ -1,10 +1,7 @@
 resource "aws_cloudwatch_log_group" "strapi_logs" {
   name              = "/ecs/strapi"
   retention_in_days = 7
-
-  lifecycle {
-    prevent_destroy = false
-  }
+  skip_destroy      = true  # Prevent deletion during 'terraform destroy'
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm" {
