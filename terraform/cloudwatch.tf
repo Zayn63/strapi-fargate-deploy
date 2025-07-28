@@ -16,6 +16,11 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "strapi_logs" {
+  name              = "/ecs/strapi"
+  retention_in_days = 7
+}
+
 resource "aws_cloudwatch_metric_alarm" "memory_alarm" {
   alarm_name          = "HighMemoryUtilization"
   comparison_operator = "GreaterThanThreshold"
