@@ -1,4 +1,4 @@
-resource "aws_ecs_cluster" "strapi" {
+resource "aws_ecs_cluster" "strapi_cluster" {
   name = "strapi-cluster"
 }
 
@@ -6,7 +6,7 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 }
 
-resource "aws_ecs_task_definition" "strapi" {
+resource "aws_ecs_task_definition" "strapi_task" {
   family                   = "strapi-task"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -39,10 +39,10 @@ resource "aws_ecs_task_definition" "strapi" {
   ])
 }
 
-resource "aws_ecs_service" "strapi" {
+resource "aws_ecs_service" "strapi_service" {
   name            = "strapi-service"
-  cluster         = aws_ecs_cluster.strapi.id
-  task_definition = aws_ecs_task_definition.strapi.arn
+  cluster         = aws_ecs_cluster.strapi_cluster.id
+  task_definition = aws_ecs_task_definition.strapi_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
@@ -53,10 +53,10 @@ resource "aws_ecs_service" "strapi" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.strapi_tg.arn
+    target_group_arn = data.aws_lb_target_group.strapi_tg.arn
     container_name   = "strapi"
     container_port   = 1337
   }
 
-  depends_on = [aws_lb_listener.strapi_listener]
+  depends_on = [data.aws_lb_listener.http]
 }
