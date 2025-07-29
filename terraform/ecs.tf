@@ -1,4 +1,4 @@
-resource "aws_ecs_cluster" "strapi" {
+resource "aws_ecs_cluster" "strapi_cluster" {
   name = "strapi-cluster"
 }
 
@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "strapi" {
 
 resource "aws_ecs_service" "strapi" {
   name                = "strapi-service"
-  cluster             = aws_ecs_cluster.strapi.id
+  cluster             = aws_ecs_cluster.strapi_cluster.id
   task_definition     = aws_ecs_task_definition.strapi.arn
   launch_type         = "FARGATE"
   desired_count       = 1
