@@ -1,40 +1,24 @@
-resource "aws_ecs_cluster" "strapi_cluster" {
+resource "aws_ecs_cluster" "strapi" {
   name = "strapi-cluster"
 }
 
-resource "aws_iam_role" "ecs_task_execution_role" {
+data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
-    }]
-  })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-resource "aws_ecs_task_definition" "strapi_task" {
+resource "aws_ecs_task_definition" "strapi" {
   family                   = "strapi-task"
-  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
-}
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = data.aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
       name      = "strapi"
-      image     = var.docker_image
+      image     = "zayn63/strapi:latest"
       essential = true
       portMappings = [
         {
@@ -44,10 +28,10 @@ resource "aws_ecs_task_definition" "strapi_task" {
         }
       ],
       logConfiguration = {
-        logDriver = "awslogs",
+        logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.strapi_logs.name,
-          awslogs-region        = "eu-north-1",
+          awslogs-group         = "/ecs/strapi"
+          awslogs-region        = "eu-north-1"
           awslogs-stream-prefix = "strapi"
         }
       }
@@ -55,16 +39,16 @@ resource "aws_ecs_task_definition" "strapi_task" {
   ])
 }
 
-resource "aws_ecs_service" "strapi_service" {
+resource "aws_ecs_service" "strapi" {
   name            = "strapi-service"
-  cluster         = aws_ecs_cluster.strapi_cluster.id
-  task_definition = aws_ecs_task_definition.strapi_task.arn
-  desired_count   = 1
+  cluster         = aws_ecs_cluster.strapi.id
+  task_definition = aws_ecs_task_definition.strapi.arn
   launch_type     = "FARGATE"
+  desired_count   = 1
 
   network_configuration {
-    subnets         = var.subnet_ids
-    security_groups = [var.security_group_id]
+    subnets         = ["subnet-086c3ae98cdde3671", "subnet-0da2d6106d23b40c7"]
+    security_groups = ["sg-0449336e4644cdbb3"]
     assign_public_ip = true
   }
 
@@ -74,5 +58,5 @@ resource "aws_ecs_service" "strapi_service" {
     container_port   = 1337
   }
 
-  depends_on = [aws_lb_listener.http]
+  depends_on = [aws_lb_listener.strapi_listener]
 }
