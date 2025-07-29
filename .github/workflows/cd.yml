@@ -1,44 +1,42 @@
-name: Deploy with Terraform
+name: Deploy Strapi to AWS via Terraform
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: terraform  # adjust if your .tf files are elsewhere
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.8.3
+          terraform_version: 1.6.6
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
+      - name: Show current directory and files (debug)
+        run: |
+          echo "Current working directory: $(pwd)"
+          ls -la
+          ls -la terraform/
 
-      - name: Terraform Init
-        run: terraform -chdir=terraform init
+      - name: Terraform Init (reconfigure)
+        run: terraform init -reconfigure
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
 
       - name: Terraform Validate
-        run: terraform -chdir=terraform validate
+        run: terraform validate
 
       - name: Terraform Plan
-        run: terraform -chdir=terraform plan
+        run: terraform plan
 
-      - name: Enable verbose debug log printing
-        run: echo "TF_LOG=DEBUG" >> $GITHUB_ENV
-
-      - name: Terraform Apply with Debug Logging
-        run: |
-          terraform -chdir=terraform apply -auto-approve | tee tf_output.log
-
-      - name: Show Terraform Output Log on Failure
-        if: failure()
-        run: cat tf_output.log
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
