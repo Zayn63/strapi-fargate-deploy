@@ -3,7 +3,7 @@ output "alb_dns" {
 }
 
 output "ecs_cluster_name" {
-  value = aws_ecs_cluster.strapi_cluster.name
+  value = data.aws_ecs_cluster.strapi_cluster.cluster_name
 }
 
 output "log_group_name" {
