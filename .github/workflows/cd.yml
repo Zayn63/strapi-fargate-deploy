@@ -9,7 +9,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform  # 👈 this tells every Terraform step to run inside ./terraform
 
     steps:
       - name: Checkout code
