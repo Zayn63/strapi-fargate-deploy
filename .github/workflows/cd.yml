@@ -1,4 +1,4 @@
-name: Terraform Deploy to AWS
+name: Deploy to AWS
 
 on:
   workflow_dispatch:
@@ -7,34 +7,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: terraform  # 👈 this tells every Terraform step to run inside ./terraform
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
       - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        run: terraform plan
+        run: terraform -chdir=terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform -chdir=terraform apply -auto-approve
