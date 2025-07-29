@@ -1,35 +1,4 @@
-resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  alarm_name          = "strapi-high-cpu"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = 60
-  statistic           = "Average"
-  threshold           = 70
-
-  dimensions = {
-    ClusterName = aws_ecs_cluster.strapi_cluster.name
-    ServiceName = aws_ecs_service.strapi_service.name
-  }
-
-  alarm_description = "Alarm when ECS CPU exceeds 70%"
-}
-
-resource "aws_cloudwatch_metric_alarm" "high_memory" {
-  alarm_name          = "strapi-high-memory"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "MemoryUtilization"
-  namespace           = "AWS/ECS"
-  period              = 60
-  statistic           = "Average"
-  threshold           = 80
-
-  dimensions = {
-    ClusterName = aws_ecs_cluster.strapi_cluster.name
-    ServiceName = aws_ecs_service.strapi_service.name
-  }
-
-  alarm_description = "Alarm when ECS Memory exceeds 80%"
+resource "aws_cloudwatch_log_group" "strapi_logs" {
+  name              = "/ecs/strapi"
+  retention_in_days = 7
 }
