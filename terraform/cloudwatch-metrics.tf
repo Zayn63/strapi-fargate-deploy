@@ -9,8 +9,9 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   threshold           = 70
 
   dimensions = {
-    ClusterName = aws_ecs_cluster.strapi_cluster.name
-    ServiceName = aws_ecs_service.strapi_service.name
+    ClusterName = aws_ecs_cluster.zstrapi.name
+    ServiceName = aws_ecs_service.zstrapi.name
+
   }
 
   alarm_description = "Triggered when ECS CPU usage exceeds 70%"
@@ -27,8 +28,9 @@ resource "aws_cloudwatch_metric_alarm" "high_memory" {
   threshold           = 80
 
   dimensions = {
-    ClusterName = aws_ecs_cluster.strapi_cluster.name
-    ServiceName = aws_ecs_service.strapi_service.name
+    ClusterName = aws_ecs_cluster.zstrapi.name
+    ServiceName = aws_ecs_service.zstrapi.name
+
   }
 
   alarm_description = "Triggered when ECS memory usage exceeds 80%"
