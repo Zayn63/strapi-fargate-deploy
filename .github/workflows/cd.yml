@@ -11,6 +11,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Confirm ECS Cluster File Exists
+        run: cat terraform/ecs.tf
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -31,6 +34,9 @@ jobs:
 
       - name: Terraform Init
         run: terraform -chdir=terraform init
+
+      - name: Terraform Validate
+        run: terraform -chdir=terraform validate
 
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve
