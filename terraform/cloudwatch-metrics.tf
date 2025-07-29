@@ -9,8 +9,8 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   threshold           = 70
 
   dimensions = {
-    ClusterName = aws_ecs_cluster.zstrapi.name
-    ServiceName = aws_ecs_service.zstrapi.name
+    ClusterName = aws_ecs_cluster.strapi.name
+    ServiceName = aws_ecs_service.strapi.name
 
   }
 
@@ -28,8 +28,8 @@ resource "aws_cloudwatch_metric_alarm" "high_memory" {
   threshold           = 80
 
   dimensions = {
-    ClusterName = aws_ecs_cluster.zstrapi.name
-    ServiceName = aws_ecs_service.zstrapi.name
+    ClusterName = aws_ecs_cluster.strapi.name
+    ServiceName = aws_ecs_service.strapi.name
 
   }
 
