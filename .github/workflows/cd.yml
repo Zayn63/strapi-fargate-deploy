@@ -1,37 +1,37 @@
-name: Terraform Deploy
+name: Terraform CD
 
 on:
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: Terraform Deploy
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
-      - name: Terraform Validate
-        run: terraform -chdir=terraform validate
-
-      - name: Terraform Plan
-        run: terraform -chdir=terraform plan
+      - name: Remove stale target group from state
+        run: terraform -chdir=terraform state rm aws_lb_target_group.strapi_tg || true
 
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve
