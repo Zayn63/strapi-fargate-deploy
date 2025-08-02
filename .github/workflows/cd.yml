@@ -1,4 +1,4 @@
-name: Terraform Deploy (terraform7)
+name: Terraform Deploy
 
 # Manual trigger only
 on:
