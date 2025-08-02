@@ -29,8 +29,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Terraform Init
-        run: terraform init
+      - name: 🧹 Clean Terraform Cache
+        run: |
+          rm -rf .terraform terraform.tfstate terraform.tfstate.backup terraform.tfplan
+
+      - name: Terraform Init (fresh)
+        run: terraform init -reconfigure
 
       - name: Terraform Validate
         run: terraform validate
