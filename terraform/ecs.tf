@@ -8,21 +8,17 @@ resource "aws_ecs_task_definition" "strapi_task" {
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # CHANGED: from data to resource
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # ✅ use the resource, not data
 
-  container_definitions = jsonencode([
-    {
-      name      = "strapi"
-      image     = "${aws_ecr_repository.strapi.repository_url}:latest"
-      essential = true
-      portMappings = [
-        {
-          containerPort = 1337
-          hostPort      = 1337
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "strapi"
+    image     = "${aws_ecr_repository.strapi.repository_url}:latest"
+    essential = true
+    portMappings = [{
+      containerPort = 1337
+      hostPort      = 1337
+    }]
+  }])
 }
 
 resource "aws_ecs_service" "strapi_service" {
