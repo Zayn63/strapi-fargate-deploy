@@ -1,10 +1,8 @@
 name: Deploy Strapi to Amazon ECS
-
 on:
   push:
     branches:
       - main  # Change if your default branch is different
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
