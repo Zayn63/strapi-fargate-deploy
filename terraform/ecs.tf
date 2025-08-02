@@ -8,7 +8,7 @@ resource "aws_ecs_task_definition" "strapi_task" {
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # ✅ use the resource, not data
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([{
     name      = "strapi"
@@ -17,7 +17,15 @@ resource "aws_ecs_task_definition" "strapi_task" {
     portMappings = [{
       containerPort = 1337
       hostPort      = 1337
-    }]
+    }],
+    logConfiguration = {
+      logDriver = "awslogs",
+      options = {
+        awslogs-group         = "/ecs/strapi",
+        awslogs-region        = "eu-north-1",
+        awslogs-stream-prefix = "ecs"
+      }
+    }
   }])
 }
 
@@ -33,4 +41,12 @@ resource "aws_ecs_service" "strapi_service" {
     security_groups  = [var.security_group_id]
     assign_public_ip = true
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.strapi_tg.arn
+    container_name   = "strapi"
+    container_port   = 1337
+  }
+
+  depends_on = [aws_lb_listener.strapi_listener]
 }
