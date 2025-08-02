@@ -3,19 +3,20 @@ name: Deploy Strapi to Amazon ECS
 on:
   push:
     branches:
-      - main  # Change if your default branch is different
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: eu-north-1
-      TASK_FAMILY: strapi-task-family
-      CLUSTER_NAME: strapi-cluster
-      SERVICE_NAME: strapi-task-family-service-h78gjib1
-
     steps:
+      - name: Set environment variables
+        run: |
+          echo "AWS_REGION=eu-north-1" >> $GITHUB_ENV
+          echo "TASK_FAMILY=strapi-task-family" >> $GITHUB_ENV
+          echo "CLUSTER_NAME=strapi-cluster" >> $GITHUB_ENV
+          echo "SERVICE_NAME=strapi-task-family-service-h78gjib1" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -24,7 +25,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: eu-north-1
 
       - name: Debug Task Family
         run: echo "Using ECS Task Family: $TASK_FAMILY"
