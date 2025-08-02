@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Terraform from terraform7 directory
+    name: Deploy Terraform from terraform directory
     runs-on: ubuntu-latest
 
     defaults:
