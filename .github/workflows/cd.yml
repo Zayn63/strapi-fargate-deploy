@@ -1,46 +1,68 @@
-name: Terraform Deploy
+name: Deploy Strapi to ECS
 
-# Manual trigger only
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: zayn-repo
+  ECS_CLUSTER: strapi
+  ECS_SERVICE: strapi
+  ECS_TASK_DEFINITION: .aws/task-definition.json
+  CONTAINER_NAME: strapi
 
 jobs:
   deploy:
-    name: Deploy Terraform from terraform directory
+    name: Build and Deploy to ECS
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: terraform7  # 💡 all commands run inside this dir
-
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: 🧹 Clean Terraform Cache
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          rm -rf .terraform terraform.tfstate terraform.tfstate.backup terraform.tfplan
+          IMAGE_TAG=latest
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
 
-      - name: Terraform Init (fresh)
-        run: terraform init -reconfigure
+      - name: Download current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_SERVICE }} \
+            --query taskDefinition > task-def.json
 
-      - name: Terraform Validate
-        run: terraform validate
+      - name: Update task definition with new image
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+          cat task-def.json | jq --arg IMAGE "$IMAGE_URI" '.containerDefinitions[0].image = $IMAGE' > ${{ env.ECS_TASK_DEFINITION }}
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
+      - name: Register new ECS task definition revision
+        id: register-task-def
+        run: |
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://${{ env.ECS_TASK_DEFINITION }} \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+      - name: Deploy updated task definition to ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ env.TASK_DEF_ARN }}
