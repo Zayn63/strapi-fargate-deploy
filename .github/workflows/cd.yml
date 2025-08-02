@@ -1,45 +1,43 @@
-name: Deploy to ECS
+name: Deploy Strapi to Amazon ECS
 
 on:
   push:
     branches:
-      - main
-
-env:
-  AWS_REGION: eu-north-1
-  TASK_FAMILY: strapi-task
-  CLUSTER_NAME: strapi-cluster
-  SERVICE_NAME: strapi
+      - main  # Change to your default branch name if needed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: eu-north-1
+      ECS_CLUSTER: strapi-cluster
+      ECS_SERVICE: strapi-task-family-service-h78gjib1
+      TASK_FAMILY: strapi-task
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Debug Task Family
-        run: echo "Using ECS Task Family: ${{ env.TASK_FAMILY }}"
-
-      - name: Get Latest Task Definition ARN
+      - name: Fetch latest Task Definition ARN
         id: get-task-def
         run: |
           LATEST_TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition ${{ env.TASK_FAMILY }} \
+            --task-definition $TASK_FAMILY \
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)
           echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
 
-      - name: Update ECS Service
+      - name: Deploy updated Task Definition to ECS Service
         run: |
           aws ecs update-service \
-            --cluster ${{ env.CLUSTER_NAME }} \
-            --service ${{ env.SERVICE_NAME }} \
-            --task-definition ${{ env.LATEST_TASK_DEF }}
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --task-definition $LATEST_TASK_DEF
