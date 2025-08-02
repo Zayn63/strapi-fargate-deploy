@@ -1,18 +1,3 @@
-name: Deploy Strapi to Amazon ECS
-on:
-  push:
-    branches:
-      - main  # Change if your default branch is different
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: eu-north-1
-      TASK_FAMILY: strapi-task-family
-      CLUSTER_NAME: strapi-cluster
-      SERVICE_NAME: strapi-task-family-service-h78gjib1
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,8 +10,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Debug Task Family
-          run: echo " Using ECS Task Family: $TASK_FAMILY "
-          
+        run: echo "Using ECS Task Family: $TASK_FAMILY"
+
       - name: Describe Task Definition
         run: aws ecs describe-task-definition --task-definition $TASK_FAMILY
 
