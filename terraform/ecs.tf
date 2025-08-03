@@ -17,12 +17,13 @@ resource "aws_ecs_task_definition" "strapi_task" {
     portMappings = [{
       containerPort = 1337
       hostPort      = 1337
+      protocol      = "tcp"
     }]
     logConfiguration = {
-      logDriver = "awslogs",
+      logDriver = "awslogs"
       options = {
-        awslogs-group         = "/ecs/strapi",
-        awslogs-region        = "eu-north-1",
+        awslogs-group         = "/ecs/strapi"
+        awslogs-region        = "eu-north-1"
         awslogs-stream-prefix = "ecs"
       }
     }
@@ -48,5 +49,7 @@ resource "aws_ecs_service" "strapi_service" {
     container_port   = 1337
   }
 
-  depends_on = [aws_lb_listener.strapi_listener]
+  depends_on = [
+    aws_lb_listener.strapi_listener
+  ]
 }
