@@ -1,43 +1,63 @@
-name: Deploy Strapi to Amazon ECS
+name: Deploy Strapi to AWS
 
 on:
   push:
     branches:
-      - main  # Change to your default branch name if needed
+      - main  # or your deployment branch
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: strapi
+  IMAGE_TAG: latest
 
 jobs:
   deploy:
+    name: Deploy to ECS Fargate
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: eu-north-1
-      ECS_CLUSTER: strapi-cluster
-      ECS_SERVICE: strapi-task-family-service-h78gjib1
-      TASK_FAMILY: strapi-task
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Fetch latest Task Definition ARN
-        id: get-task-def
-        run: |
-          LATEST_TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition $TASK_FAMILY \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Deploy updated Task Definition to ECS Service
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image to ECR
         run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --task-definition $LATEST_TASK_DEF
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Format Terraform files
+        run: terraform fmt -check
+
+      - name: Validate Terraform config
+        run: terraform validate
+
+      - name: Plan Terraform changes
+        run: terraform plan
+
+      - name: Apply Terraform changes
+        run: terraform apply -auto-approve
+
+      - name: Output ALB DNS Name
+        run: terraform output alb_dns
